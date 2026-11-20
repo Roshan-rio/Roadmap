@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Roadmap Tracker</title>
+<style>
+:root{--ink:#27304a;--mut:#6f7a96;--line:#e6eaf5;--card:#fff;--am:#c2570c;--amb:#fff3e3;--pm:#4a52d6;--pmb:#eff1ff;--ok:#1f9d6b;--acc:#6c63ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:linear-gradient(160deg,#fff1f7 0%,#eef4ff 52%,#e6f8f1 100%) fixed}
+main{max-width:780px;margin:0 auto;padding:26px 16px 48px}
+h1{font-size:1.8rem;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mut);margin:0 0 20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 6px 20px rgba(80,90,160,.09)}
+.stat b{font-size:1.5rem;display:block;line-height:1.2}
+.stat span{color:var(--mut);font-size:.85rem}
+.bar{height:6px;border-radius:9px;background:#e9ecfa;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb36b,#6c63ff);border-radius:9px;transition:width .3s}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px}
+.day{background:var(--card);border:2px solid transparent;border-radius:16px;padding:10px 2px;text-align:center;cursor:pointer;color:var(--ink);font:inherit;box-shadow:0 4px 14px rgba(80,90,160,.08)}
+.day small{display:block;color:var(--mut);font-size:.75rem}
+.day strong{display:block;font-size:1.1rem}
+.day.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
+.day.sel small{color:#e6e4ff}
+.day.today strong{text-decoration:underline;text-underline-offset:3px}
+.dots{display:flex;justify-content:center;gap:4px;margin-top:5px}
+.dot{width:9px;height:9px;border-radius:50%;border:1.5px solid #b7bdd3;background:#fff}
+.dot.am.on{background:#ff9a3d;border-color:#ff9a3d}
+.dot.pm.on{background:#5a62e8;border-color:#5a62e8}
+.day.sel .dot{border-color:#fff}
+.day.sel .dot.on{border-color:#fff}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.nav h2{font-size:1.25rem;margin:0;text-align:center;flex:1}
+button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 16px;cursor:pointer;box-shadow:0 3px 10px rgba(80,90,160,.07)}
+button:hover{border-color:var(--acc)}
+button:focus-visible,.day:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.slot{border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 8px 24px rgba(80,90,160,.1)}
+.slot.am{background:linear-gradient(135deg,#fff6e8,#ffeacf)}
+.slot.pm{background:linear-gradient(135deg,#f1f2ff,#e2e6ff)}
+.slot h3{margin:0;font-size:1.1rem}
+.slot.am h3{color:var(--am)}
+.slot.pm h3{color:var(--pm)}
+.plan{margin:2px 0 12px;color:var(--mut)}
+label.chk{display:flex;gap:10px;align-items:center;margin-bottom:10px;font-weight:600}
+label.chk input{width:20px;height:20px;accent-color:var(--acc)}
+textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:12px}
+textarea{min-height:100px;resize:vertical}
+.note{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 6px 20px rgba(80,90,160,.09)}
+.note label{display:block;font-weight:600;margin-bottom:8px}
+.saved{color:var(--ok);font-size:.9rem;min-height:1.4em;margin:8px 2px 0;text-align:right}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+@media (max-width:480px){.day small{font-size:.65rem}.stats{gap:8px}.stat{padding:10px}.stat b{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<main>
+  <h1>📅 Daily roadmap</h1>
+  <p class="sub">Plan for the day, then write down what you actually did.</p>
+  <div class="stats">
+    <div class="stat"><b id="sWeek">0/14</b><span>sessions done this week</span><div class="bar"><i id="bar"></i></div></div>
+    <div class="stat"><b id="sStreak">0</b><span>day streak</span></div>
+    <div class="stat"><b id="sTotal">0</b><span>sessions in total</span></div>
+  </div>
+  <div class="week" id="week"></div>
+  <div class="nav">
+    <button id="prev" aria-label="Previous day">Previous</button>
+    <h2 id="title"></h2>
+    <button id="next" aria-label="Next day">Next</button>
+  </div>
+  <div id="slots"></div>
+  <div class="note">
+    <label for="nextStep">What should I start with tomorrow?</label>
+    <input type="text" id="nextStep" placeholder="e.g. finish the login API">
+  </div>
+  <div class="saved" id="saved" aria-live="polite"></div>
+  <div class="foot">
+    <button id="today">Jump to today</button>
+    <button id="export">Copy all entries</button>
+  </div>
+</main>
+<script>
+var K='roadmap-v1',data={};
+try{data=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){data={}}
+var PLAN={
+1:['Python relearning','Major project'],
+2:['Java relearning','Major project'],
+3:['Data Structures (theory and problems)','Minor project 1: Data Structures'],
+4:['Python practice and mini programs','Major project'],
+5:['Java practice (OOP, collections)','Minor project 2: Java'],
+6:['Research paper reading and notes','Major project (longer session and weekly review)'],
+0:['React and JavaScript revision','Weekly planning and research paper ideas']};
+var SLOTS=[['am','Morning','6–7 AM','☀️'],['pm','Night','9–10 PM','🌙']];
+var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function pad(n){return String(n).padStart(2,'0')}
+function ds(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parse(s){var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+function add(s,n){var d=parse(s);d.setDate(d.getDate()+n);return ds(d)}
+var todayS=ds(new Date()),sel=todayS,timer;
+function blank(){return{am:{done:false,text:''},pm:{done:false,text:''},next:''}}
+function get(d){return data[d]||blank()}
+function set(d,fn){var e=get(d);fn(e);data[d]=e;try{localStorage.setItem(K,JSON.stringify(data))}catch(x){}flash()}
+function flash(){var s=document.getElementById('saved');s.textContent='Saved';clearTimeout(timer);timer=setTimeout(function(){s.textContent=''},1500)}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+function renderDay(){
+  var d=parse(sel),e=get(sel),p=PLAN[d.getDay()];
+  document.getElementById('title').textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+  var h='';
+  SLOTS.forEach(function(s,i){
+    var k=s[0];
+    h+='<section class="slot '+k+'"><h3>'+s[1]+' session, '+s[2]+'</h3><p class="plan">Plan: '+p[i]+'</p>'+
+    '<label class="chk"><input type="checkbox" data-k="'+k+'" '+(e[k].done?'checked':'')+'> Completed</label>'+
+    '<textarea data-t="'+k+'" aria-label="What I did in the '+s[1].toLowerCase()+' session" placeholder="What did you study or build? Topics, code written, problems solved…">'+esc(e[k].text)+'</textarea></section>';
+  });
+  document.getElementById('slots').innerHTML=h;
+  document.getElementById('nextStep').value=e.next;
+  document.querySelectorAll('[data-k]').forEach(function(c){c.onchange=function(){set(sel,function(x){x[c.dataset.k].done=c.checked});renderMeta()}});
+  document.querySelectorAll('[data-t]').forEach(function(t){t.oninput=function(){set(sel,function(x){x[t.dataset.t].text=t.value})}});
+  renderMeta();
+}
+function renderMeta(){
+  var d=parse(sel),mon=add(sel,-((d.getDay()+6)%7)),h='',wk=0;
+  for(var i=0;i<7;i++){
+    var s=add(mon,i),e=get(s),dd=parse(s);
+    if(e.am.done)wk++;if(e.pm.done)wk++;
+    h+='<button class="day'+(s===sel?' sel':'')+(s===todayS?' today':'')+'" data-d="'+s+'" aria-label="'+s+'"><small>'+DN[dd.getDay()]+'</small><strong>'+dd.getDate()+'</strong><span class="dots"><i class="dot am'+(e.am.done?' on':'')+'"></i><i class="dot pm'+(e.pm.done?' on':'')+'"></i></span></button>';
+  }
+  var w=document.getElementById('week');w.innerHTML=h;
+  w.querySelectorAll('[data-d]').forEach(function(b){b.onclick=function(){sel=b.dataset.d;renderDay()}});
+  var tot=0;for(var k in data){if(data[k].am.done)tot++;if(data[k].pm.done)tot++}
+  var st=0,c=todayS;
+  function any(x){var e=data[x];return e&&(e.am.done||e.pm.done)}
+  if(!any(c))c=add(c,-1);
+  while(any(c)){st++;c=add(c,-1)}
+  document.getElementById('sWeek').textContent=wk+'/14';document.getElementById('bar').style.width=(wk/14*100)+'%';
+  document.getElementById('sStreak').textContent=st;
+  document.getElementById('sTotal').textContent=tot;
+}
+document.getElementById('prev').onclick=function(){sel=add(sel,-1);renderDay()};
+document.getElementById('next').onclick=function(){sel=add(sel,1);renderDay()};
+document.getElementById('today').onclick=function(){sel=todayS;renderDay()};
+document.getElementById('nextStep').oninput=function(){var v=this.value;set(sel,function(x){x.next=v})};
+document.getElementById('export').onclick=function(){
+  var out=Object.keys(data).sort().map(function(k){var e=data[k];return k+'\nMorning ('+(e.am.done?'done':'not done')+'): '+e.am.text+'\nNight ('+(e.pm.done?'done':'not done')+'): '+e.pm.text+'\nNext: '+e.next}).join('\n\n');
+  var s=document.getElementById('saved');
+  try{navigator.clipboard.writeText(out).then(function(){s.textContent='Copied to clipboard'},function(){s.textContent='Copy was blocked by the browser'})}catch(x){s.textContent='Copy was blocked by the browser'}
+};
+renderDay();
+</script>
+</body>
+</html>
